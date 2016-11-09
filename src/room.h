@@ -29,6 +29,7 @@
 #include "room_view.h"
 #include "timer.h"
 #include "toolbar.h"
+#include "dialog.h"
 
 #ifndef _NDEBUG
 #   include "debug_proxy.h"
@@ -100,6 +101,8 @@ private:
 
     Toolbar _toolbar;
 
+    bool _in_channel = false;
+
     std::unique_ptr<Np1SecRoom> _room;
 };
 
@@ -126,7 +129,11 @@ Room::Room(PurpleConversation* conv)
         _room->create_channel();
     };
 
-    _toolbar.on_search_channel_clicked = [this] {
+    _toolbar.on_search_channel_clicked = [this, conv] {
+        if (_in_channel) {
+            new Dialog(conv, "Can't perform a search while in a channel");
+            return;
+        }
         _room->search_channels();
     };
 }
@@ -268,6 +275,7 @@ inline
 void Room::joined_channel(np1sec::Channel* channel)
 {
     inform("Room::joined_channel ", size_t(channel));
+    _in_channel = true;
 }
 
 inline
